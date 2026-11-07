@@ -70,3 +70,9 @@ export function emit<E extends keyof AppEvents>(
   }
 }
 
+export const eventBus = {
+  emit,
+  on,
+  off,
+  clear: clearEventBus,
+};

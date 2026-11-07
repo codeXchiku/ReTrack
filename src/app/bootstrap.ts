@@ -18,18 +18,16 @@ export { getDb, setDb };
  * Executes the Study Dojo bootstrap sequence:
  * 1. Opens SQLite database ("studydojo.db") with WAL mode and foreign keys.
  * 2. Runs pending migrations.
- * 3. Registers all features with the feature registry.
- * 4. Runs feature init hooks.
+ * 3. Sets the global Db instance.
+ * 4. Registers all features with the feature registry.
+ * 5. Runs feature init hooks.
  */
 export async function bootstrap(): Promise<void> {
   const db = await openDatabase('studydojo.db');
   await runMigrations(db, migrations);
+  setDb(db);
 
   clearRegistry();
   registerFeatures(features);
   await runFeatureInits();
-
-  setDb(db);
 }
-
-

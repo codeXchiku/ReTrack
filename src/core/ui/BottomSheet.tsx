@@ -1,6 +1,7 @@
 import React, { type ReactNode, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Pressable,
   type StyleProp,
   StyleSheet,
@@ -104,55 +105,63 @@ export function BottomSheet({
   }
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {/* Dimmed backdrop */}
-      <Animated.View
-        style={[styles.backdrop, animatedBackdropStyle]}
-        pointerEvents="auto"
-      >
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="Dismiss bottom sheet"
-        />
-      </Animated.View>
+    <Modal
+      transparent
+      visible={isRendered}
+      onRequestClose={onClose}
+      animationType="none"
+      statusBarTranslucent
+    >
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        {/* Dimmed backdrop */}
+        <Animated.View
+          style={[styles.backdrop, animatedBackdropStyle]}
+          pointerEvents="auto"
+        >
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss bottom sheet"
+          />
+        </Animated.View>
 
-      {/* Sheet content wrapped in KeyboardAvoidingView */}
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={styles.keyboardContainer}
-        pointerEvents="box-none"
-      >
-        <GestureDetector gesture={panGesture}>
-          <Animated.View
-            accessibilityLabel={accessibilityLabel}
-            style={[
-              styles.sheet,
-              animatedSheetStyle,
-              {
-                backgroundColor: tokens.colors.surface,
-                borderTopLeftRadius: tokens.radii.lg,
-                borderTopRightRadius: tokens.radii.lg,
-                borderColor: tokens.colors.border,
-              },
-              style,
-            ]}
-          >
-            {/* Grab handle */}
-            <View style={styles.handleContainer}>
-              <View
-                style={[
-                  styles.handle,
-                  { backgroundColor: tokens.colors.surfaceAlt },
-                ]}
-              />
-            </View>
-            {children}
-          </Animated.View>
-        </GestureDetector>
-      </KeyboardAvoidingView>
-    </View>
+        {/* Sheet content wrapped in KeyboardAvoidingView */}
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.keyboardContainer}
+          pointerEvents="box-none"
+        >
+          <GestureDetector gesture={panGesture}>
+            <Animated.View
+              accessibilityLabel={accessibilityLabel}
+              style={[
+                styles.sheet,
+                animatedSheetStyle,
+                {
+                  backgroundColor: tokens.colors.surface,
+                  borderTopLeftRadius: tokens.radii.lg,
+                  borderTopRightRadius: tokens.radii.lg,
+                  borderColor: tokens.colors.border,
+                },
+                style,
+              ]}
+            >
+              {/* Grab handle */}
+              <View style={styles.handleContainer}>
+                <View
+                  style={[
+                    styles.handle,
+                    { backgroundColor: tokens.colors.surfaceAlt },
+                  ]}
+                />
+              </View>
+              {children}
+            </Animated.View>
+          </GestureDetector>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
   );
 }
 

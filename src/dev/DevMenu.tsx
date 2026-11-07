@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getDb } from '@/core/db';
+import { navigateToScreen } from '@/core/navigation';
 import { createSetting } from '@/core/storage';
 import { spacing } from '@/core/theme';
 import { Button, Card, Screen, Text } from '@/core/ui';
+import { NO_SUBJECT_LABEL, SubjectPicker } from '@/features/subjects';
 import { UiGallery } from './UiGallery';
 
 const testStorageSetting = createSetting<string>('settings.testKey', 'not_set');
@@ -13,6 +15,7 @@ export function DevMenu(): React.JSX.Element {
   const navigation = useNavigation();
   const [showGallery, setShowGallery] = useState(false);
   const currentTestSettingVal = testStorageSetting.useValue();
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
 
   const [storageCheckResult, setStorageCheckResult] = useState<{
     settingValue: string;
@@ -102,6 +105,35 @@ export function DevMenu(): React.JSX.Element {
         )}
       </Card>
 
+      {/* Subjects playground */}
+      <Card style={styles.card}>
+        <Text variant="heading" color="text" style={styles.sectionTitle}>
+          Subjects Playground
+        </Text>
+        <Text variant="caption" color="textMuted" style={styles.sectionSubtitle}>
+          Subject picker & management link
+        </Text>
+
+        <View style={styles.pickerRow}>
+          <SubjectPicker
+            value={selectedSubjectId}
+            onChange={setSelectedSubjectId}
+          />
+        </View>
+        <Text variant="caption" color="textMuted">
+          Current value: {selectedSubjectId ?? NO_SUBJECT_LABEL}
+        </Text>
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Manage Subjects Screen →"
+          variant="secondary"
+          onPress={() => navigateToScreen('ManageSubjects')}
+          accessibilityLabel="Open Manage Subjects screen"
+        />
+      </Card>
+
       <View style={styles.footer}>
         <Button
           title="Close Dev Menu"
@@ -128,6 +160,17 @@ const styles = StyleSheet.create({
   card: {
     padding: spacing.lg,
     marginBottom: spacing.xl,
+  },
+  sectionTitle: {
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    marginBottom: spacing.md,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
   spacer: {
     height: spacing.md,
