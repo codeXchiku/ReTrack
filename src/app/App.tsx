@@ -1,9 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { darkPalette, spacing } from '@/core/theme';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+  type Theme,
+} from '@react-navigation/native';
+import { flushNavigationQueue, navigationRef } from '@/core/navigation';
+import { darkPalette, spacing, useTheme } from '@/core/theme';
 import { Button, Screen, Text } from '@/core/ui';
-import { UiGallery } from '@/dev/UiGallery';
+import { RootNavigator } from '@/navigation';
 import { AppProviders } from './AppProviders';
 import { bootstrap } from './bootstrap';
 
@@ -14,6 +21,7 @@ type BootstrapState =
 
 function AppContent(): React.JSX.Element {
   const [state, setState] = useState<BootstrapState>({ status: 'loading' });
+  const { tokens, isDark } = useTheme();
 
   const runBootstrap = useCallback(async () => {
     setState({ status: 'loading' });
@@ -29,6 +37,23 @@ function AppContent(): React.JSX.Element {
   useEffect(() => {
     runBootstrap();
   }, [runBootstrap]);
+
+  const navTheme: Theme = useMemo(() => {
+    const baseTheme = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...baseTheme,
+      dark: isDark,
+      colors: {
+        ...baseTheme.colors,
+        primary: tokens.colors.primary,
+        background: tokens.colors.background,
+        card: tokens.colors.surface,
+        text: tokens.colors.text,
+        border: tokens.colors.border,
+        notification: tokens.colors.focus,
+      },
+    };
+  }, [isDark, tokens]);
 
   if (state.status === 'loading') {
     return (
@@ -64,16 +89,14 @@ function AppContent(): React.JSX.Element {
     );
   }
 
-  if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    return <UiGallery />;
-  }
-
   return (
-    <Screen style={styles.mainContainer}>
-      <Text variant="title" color="text">
-        Study Dojo
-      </Text>
-    </Screen>
+    <NavigationContainer
+      theme={navTheme}
+      ref={navigationRef}
+      onReady={flushNavigationQueue}
+    >
+      <RootNavigator />
+    </NavigationContainer>
   );
 }
 
@@ -112,11 +135,6 @@ const styles = StyleSheet.create({
   errorMessage: {
     marginBottom: spacing.xxl,
     textAlign: 'center',
-  },
-  mainContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 
