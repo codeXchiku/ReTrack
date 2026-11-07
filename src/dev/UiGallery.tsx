@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { getDb } from '@/core/db';
+import { createSetting } from '@/core/storage';
 import { type ThemeMode, useTheme } from '@/core/theme';
 import {
   BoltIcon,
@@ -29,6 +31,8 @@ import {
   UserIcon,
 } from '@/core/ui';
 
+const testStorageSetting = createSetting<string>('settings.testKey', 'not_set');
+
 /**
  * Dev-only gallery showcasing all design system components and live theme switching.
  */
@@ -42,6 +46,34 @@ export function UiGallery(): React.JSX.Element {
   const [sheetInputVal, setSheetInputVal] = useState('');
   const [sheetVisible, setSheetVisible] = useState(false);
   const [ringProgress, setRingProgress] = useState(0.7);
+
+  const currentTestSettingVal = testStorageSetting.useValue();
+  const [storageCheckResult, setStorageCheckResult] = useState<{
+    settingValue: string;
+    dbCreatedAt: string;
+  } | null>(null);
+
+  const handleStorageCheck = async () => {
+    const testVal = `val_${Date.now()}`;
+    testStorageSetting.set(testVal);
+    const readVal = testStorageSetting.get();
+
+    let dbVal = 'error';
+    try {
+      const db = getDb();
+      const row = await db.queryOne<{ value: string }>(
+        "SELECT value FROM app_meta WHERE key = 'db_created_at';",
+      );
+      dbVal = row?.value ?? 'null';
+    } catch (e) {
+      dbVal = e instanceof Error ? e.message : String(e);
+    }
+
+    setStorageCheckResult({
+      settingValue: readVal,
+      dbCreatedAt: dbVal,
+    });
+  };
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
     { id: 'dark', label: 'Dark' },
@@ -81,6 +113,31 @@ export function UiGallery(): React.JSX.Element {
           accessibilityLabel="Theme selector"
         />
       </View>
+
+      {/* Storage Check (SD-004) */}
+      <Section title="Storage Check (SD-004)">
+        <Card style={styles.gap12}>
+          <Button
+            title="Storage check"
+            variant="primary"
+            onPress={handleStorageCheck}
+            accessibilityLabel="Storage check"
+          />
+          <Text variant="body" color="text">
+            Current Setting: {currentTestSettingVal}
+          </Text>
+          {storageCheckResult && (
+            <View style={styles.gap12}>
+              <Text variant="body" color="text">
+                Read back: {storageCheckResult.settingValue}
+              </Text>
+              <Text variant="body" color="text">
+                db_created_at: {storageCheckResult.dbCreatedAt}
+              </Text>
+            </View>
+          )}
+        </Card>
+      </Section>
 
       {/* Typography */}
       <Section title="Typography Scale">

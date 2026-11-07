@@ -1,19 +1,35 @@
-import { clearRegistry, registerFeatures } from '@/core/registry/featureRegistry';
+import {
+  openDatabase,
+  migrations,
+  runMigrations,
+  setDb,
+  getDb,
+} from '@/core/db';
+import {
+  clearRegistry,
+  registerFeatures,
+  runFeatureInits,
+} from '@/core/registry';
 import { features } from './features';
 
-let bootstrapped = false;
+export { getDb, setDb };
 
 /**
- * Bootstraps the application by registering feature manifests.
- * Full startup sequence (database, migrations, etc.) will be added in SD-004.
+ * Executes the Study Dojo bootstrap sequence:
+ * 1. Opens SQLite database ("studydojo.db") with WAL mode and foreign keys.
+ * 2. Runs pending migrations.
+ * 3. Registers all features with the feature registry.
+ * 4. Runs feature init hooks.
  */
-export function bootstrap(): void {
-  if (bootstrapped && (typeof __DEV__ === 'undefined' || !__DEV__)) {
-    return;
-  }
-  if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    clearRegistry();
-  }
+export async function bootstrap(): Promise<void> {
+  const db = await openDatabase('studydojo.db');
+  await runMigrations(db, migrations);
+
+  clearRegistry();
   registerFeatures(features);
-  bootstrapped = true;
+  await runFeatureInits();
+
+  setDb(db);
 }
+
+
