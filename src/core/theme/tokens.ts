@@ -17,6 +17,8 @@ export type ColorPalette = {
 
 export type ColorToken = keyof ColorPalette;
 
+export type ThemeMode = 'system' | 'dark' | 'light';
+
 export const darkPalette: ColorPalette = {
   background: '#1B1E3A',
   surface: '#2A2E55',

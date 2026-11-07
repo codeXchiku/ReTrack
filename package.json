@@ -12,10 +12,13 @@
     "start": "react-native start"
   },
   "dependencies": {
+    "@op-engineering/op-sqlite": "^19.0.5",
     "@react-native/new-app-screen": "0.88.1",
+    "dayjs": "^1.11.23",
     "react": "19.3.0",
     "react-native": "0.88.1",
     "react-native-gesture-handler": "^3.5.0",
+    "react-native-mmkv": "^3.3.3",
     "react-native-reanimated": "^4.7.1",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-svg": "^15.16.1",
