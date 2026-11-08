@@ -9,7 +9,7 @@ import {
   type MaterialTopTabBarProps,
 } from '@react-navigation/material-top-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getScreens, getSubTabs, getTabs } from '@/core/registry';
+import { getScreens, getStartupRoute, getSubTabs, getTabs } from '@/core/registry';
 import { DevMenu } from '@/dev/DevMenu';
 import { SubTabBar } from './SubTabBar';
 import { TabBar } from './TabBar';
@@ -100,9 +100,13 @@ const devMenuOptions = {
 export function RootNavigator(): React.JSX.Element {
   const screens = getScreens();
   const isDev = typeof __DEV__ !== 'undefined' && __DEV__;
+  const initialRouteName = getStartupRoute() ?? 'Tabs';
 
   return (
-    <Stack.Navigator screenOptions={rootStackScreenOptions}>
+    <Stack.Navigator
+      initialRouteName={initialRouteName}
+      screenOptions={rootStackScreenOptions}
+    >
       <Stack.Screen name="Tabs" component={TabsNavigator} />
       {screens.map(screen => (
         <Stack.Screen

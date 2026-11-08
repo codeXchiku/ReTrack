@@ -53,5 +53,9 @@ export type FeatureManifest = {
   slots?: Partial<Record<SlotName, SlotItem[]>>;
   backup?: BackupProvider;
   init?: () => void | Promise<void>; // runs once after the database is ready
+  startupRoute?: {
+    order: number;
+    resolve: () => string | null;
+  };
 };
 
