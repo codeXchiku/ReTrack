@@ -1,5 +1,6 @@
 import type { FeatureManifest } from '@/core/registry/types';
 import { ManageSubjectsSlotRow } from './components/ManageSubjectsSlotRow';
+import { SubjectsStep } from './components/SubjectsStep';
 import { ManageSubjectsScreen } from './screens/ManageSubjectsScreen';
 import { useSubjectsStore } from './store/subjectsStore';
 
@@ -20,8 +21,16 @@ export const manifest: FeatureManifest = {
         component: ManageSubjectsSlotRow,
       },
     ],
+    'onboarding.steps': [
+      {
+        id: 'subjects.onboarding',
+        order: 20,
+        component: SubjectsStep as React.ComponentType<Record<string, unknown>>,
+      },
+    ],
   },
   init: async () => {
     await useSubjectsStore.getState().load();
   },
 };
+

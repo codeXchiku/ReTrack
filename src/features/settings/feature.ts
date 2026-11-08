@@ -1,5 +1,6 @@
 import type { FeatureManifest } from '@/core/registry/types';
 import { UserIcon } from '@/core/ui';
+import { GoalExamStep } from './components/GoalExamStep';
 import { SettingsScreen } from './screens/SettingsScreen';
 
 export const manifest: FeatureManifest = {
@@ -21,4 +22,14 @@ export const manifest: FeatureManifest = {
       component: SettingsScreen,
     },
   ],
+  slots: {
+    'onboarding.steps': [
+      {
+        id: 'settings.onboarding',
+        order: 30,
+        component: GoalExamStep as React.ComponentType<Record<string, unknown>>,
+      },
+    ],
+  },
 };
+

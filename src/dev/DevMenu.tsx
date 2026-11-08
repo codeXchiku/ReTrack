@@ -7,6 +7,7 @@ import { createSetting } from '@/core/storage';
 import { spacing } from '@/core/theme';
 import { Button, Card, Screen, Text } from '@/core/ui';
 import { NO_SUBJECT_LABEL, SubjectPicker } from '@/features/subjects';
+import { onboardingDone } from '@/features/onboarding';
 import { UiGallery } from './UiGallery';
 
 const testStorageSetting = createSetting<string>('settings.testKey', 'not_set');
@@ -21,6 +22,8 @@ export function DevMenu(): React.JSX.Element {
     settingValue: string;
     dbCreatedAt: string;
   } | null>(null);
+
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
 
   const handleStorageCheck = async () => {
     const testVal = `val_${Date.now()}`;
@@ -87,6 +90,23 @@ export function DevMenu(): React.JSX.Element {
           onPress={handleStorageCheck}
           accessibilityLabel="Run Storage Check"
         />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Reset onboarding"
+          variant="secondary"
+          onPress={() => {
+            onboardingDone.set(false);
+            setResetMessage('Onboarding reset! (onboarding.done = false)');
+          }}
+          accessibilityLabel="Reset onboarding"
+        />
+        {resetMessage && (
+          <Text variant="caption" color="primary" style={styles.resetMsg}>
+            {resetMessage}
+          </Text>
+        )}
 
         <View style={styles.spacer} />
 
@@ -178,6 +198,9 @@ const styles = StyleSheet.create({
   resultBox: {
     marginTop: spacing.xs,
     gap: spacing.xs,
+  },
+  resetMsg: {
+    marginTop: spacing.xs,
   },
   footer: {
     marginTop: 'auto',
