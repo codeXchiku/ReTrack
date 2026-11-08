@@ -4,10 +4,23 @@ import { useNavigation } from '@react-navigation/native';
 import { getDb } from '@/core/db';
 import { navigateToScreen } from '@/core/navigation';
 import { createSetting } from '@/core/storage';
+import { formatDuration } from '@/core/time';
 import { spacing } from '@/core/theme';
 import { Button, Card, Screen, Text } from '@/core/ui';
-import { NO_SUBJECT_LABEL, SubjectPicker } from '@/features/subjects';
+import {
+  getSubjectSync,
+  NO_SUBJECT_LABEL,
+  SubjectPicker,
+} from '@/features/subjects';
 import { onboardingDone } from '@/features/onboarding';
+import {
+  clearSessions,
+  saveSession,
+  useSessionsStore,
+  useStreak,
+  useSubjectTotals,
+  useTodayFocusedSecs,
+} from '@/features/sessions';
 import { UiGallery } from './UiGallery';
 
 const testStorageSetting = createSetting<string>('settings.testKey', 'not_set');
@@ -17,6 +30,10 @@ export function DevMenu(): React.JSX.Element {
   const [showGallery, setShowGallery] = useState(false);
   const currentTestSettingVal = testStorageSetting.useValue();
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+
+  const todayFocusedSecs = useTodayFocusedSecs();
+  const streak = useStreak();
+  const subjectTotals = useSubjectTotals('1970-01-01', '2099-12-31');
 
   const [storageCheckResult, setStorageCheckResult] = useState<{
     settingValue: string;
@@ -63,8 +80,44 @@ export function DevMenu(): React.JSX.Element {
     );
   }
 
+  const handleAdd15m = async () => {
+    const now = Date.now();
+    await saveSession({
+      mode: 'countdown',
+      subjectId: selectedSubjectId,
+      focusedSecs: 15 * 60,
+      startedAt: now - 15 * 60 * 1000,
+      endedAt: now,
+      completed: true,
+    });
+  };
+
+  const handleAdd40mYesterday = async () => {
+    const yesterdayMs = Date.now() - 24 * 60 * 60 * 1000;
+    await saveSession(
+      {
+        mode: 'countdown',
+        subjectId: selectedSubjectId,
+        focusedSecs: 40 * 60,
+        startedAt: yesterdayMs - 40 * 60 * 1000,
+        endedAt: yesterdayMs,
+        completed: true,
+      },
+      { now: yesterdayMs },
+    );
+  };
+
+  const handleClearSessions = async () => {
+    await clearSessions();
+    await useSessionsStore.getState().refresh();
+  };
+
   return (
-    <Screen style={styles.container} accessibilityLabel="Developer Menu Screen">
+    <Screen
+      scrollable
+      style={styles.container}
+      accessibilityLabel="Developer Menu Screen"
+    >
       <View style={styles.header}>
         <Text variant="title" color="text">
           Developer Menu
@@ -151,6 +204,78 @@ export function DevMenu(): React.JSX.Element {
           variant="secondary"
           onPress={() => navigateToScreen('ManageSubjects')}
           accessibilityLabel="Open Manage Subjects screen"
+        />
+      </Card>
+
+      {/* Sessions playground */}
+      <Card style={styles.card}>
+        <Text variant="heading" color="text" style={styles.sectionTitle}>
+          Sessions Playground
+        </Text>
+        <Text variant="caption" color="textMuted" style={styles.sectionSubtitle}>
+          Study sessions, streaks & live totals
+        </Text>
+
+        <Text variant="body" color="text">
+          Today: {formatDuration(todayFocusedSecs)} ({todayFocusedSecs}s)
+        </Text>
+        <Text variant="caption" color="textMuted">
+          Streak: {streak.current}d current | {streak.best}d best (Qualified:{' '}
+          {streak.todayQualified ? 'Yes' : 'No'})
+        </Text>
+
+        <View style={styles.spacer} />
+
+        <Text variant="caption" color="textMuted">
+          Per-Subject Totals:
+        </Text>
+        {subjectTotals.length === 0 ? (
+          <Text variant="caption" color="textMuted">
+            None recorded
+          </Text>
+        ) : (
+          subjectTotals.map(item => {
+            const subject = item.subjectId
+              ? getSubjectSync(item.subjectId)
+              : null;
+            const name = subject ? subject.name : 'No subject';
+            return (
+              <Text
+                key={item.subjectId ?? 'no-subject'}
+                variant="caption"
+                color="text"
+              >
+                • {name}: {formatDuration(item.secs)} ({item.secs}s)
+              </Text>
+            );
+          })
+        )}
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Add 15m session"
+          variant="primary"
+          onPress={handleAdd15m}
+          accessibilityLabel="Add 15m session"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Add 40m session (yesterday)"
+          variant="secondary"
+          onPress={handleAdd40mYesterday}
+          accessibilityLabel="Add 40m session yesterday"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Clear sessions"
+          variant="ghost"
+          onPress={handleClearSessions}
+          accessibilityLabel="Clear all sessions"
         />
       </Card>
 
