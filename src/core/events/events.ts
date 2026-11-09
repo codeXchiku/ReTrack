@@ -12,6 +12,7 @@ export type AppEvents = {
     endsAt: number | null;
     silence: boolean;
   };
+  'focus/awaitingNext': { sessionId: string; nextRound: number };
   'focus/stopped': { sessionId: string };
   'focus/finished': {
     sessionId: string;
