@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getDb } from '@/core/db';
+import { eventBus } from '@/core/events';
 import { navigateToScreen } from '@/core/navigation';
 import { createSetting } from '@/core/storage';
 import { formatDuration } from '@/core/time';
 import { spacing } from '@/core/theme';
 import { Button, Card, Screen, Text } from '@/core/ui';
+import {
+  focusController,
+  useFocusActive,
+  useFocusedMs,
+  useFocusResult,
+  useProgress,
+  useRemainingMs,
+} from '@/features/focus';
 import {
   getSubjectSync,
   NO_SUBJECT_LABEL,
@@ -34,6 +43,50 @@ export function DevMenu(): React.JSX.Element {
   const todayFocusedSecs = useTodayFocusedSecs();
   const streak = useStreak();
   const subjectTotals = useSubjectTotals('1970-01-01', '2099-12-31');
+
+  // Focus playground hooks
+  const focusActive = useFocusActive();
+  const focusRemainingMs = useRemainingMs();
+  const focusProgress = useProgress();
+  const focusFocusedMs = useFocusedMs();
+  const focusResult = useFocusResult();
+
+  const [eventLog, setEventLog] = useState<{ id: string; text: string }[]>([]);
+
+  useEffect(() => {
+    const addLog = (name: string, detail: string) => {
+      const timeStr = new Date().toTimeString().split(' ')[0] ?? '';
+      const entry = {
+        id: `${Date.now()}_${Math.random()}`,
+        text: `[${timeStr}] ${name}${detail ? ` (${detail})` : ''}`,
+      };
+      setEventLog(prev => [entry, ...prev.slice(0, 9)]);
+    };
+
+    const u1 = eventBus.on('focus/phaseStarted', e =>
+      addLog('phaseStarted', `${e.phase} endsAt=${e.endsAt ?? 'null'}`),
+    );
+    const u2 = eventBus.on('focus/paused', () => addLog('paused', ''));
+    const u3 = eventBus.on('focus/resumed', e =>
+      addLog('resumed', `${e.phase} endsAt=${e.endsAt ?? 'null'}`),
+    );
+    const u4 = eventBus.on('focus/awaitingNext', e =>
+      addLog('awaitingNext', `round=${e.nextRound}`),
+    );
+    const u5 = eventBus.on('focus/stopped', () => addLog('stopped', ''));
+    const u6 = eventBus.on('focus/finished', e =>
+      addLog('finished', `${e.focusedSecs}s done=${e.completed}`),
+    );
+
+    return () => {
+      u1();
+      u2();
+      u3();
+      u4();
+      u5();
+      u6();
+    };
+  }, []);
 
   const [storageCheckResult, setStorageCheckResult] = useState<{
     settingValue: string;
@@ -110,6 +163,47 @@ export function DevMenu(): React.JSX.Element {
   const handleClearSessions = async () => {
     await clearSessions();
     await useSessionsStore.getState().refresh();
+  };
+
+  const handleStart2mCountdown = () => {
+    focusController.start({
+      mode: 'countdown',
+      subjectId: selectedSubjectId,
+      focusMs: 2 * 60 * 1000,
+      breakMs: 0,
+      longBreakMs: 0,
+      rounds: 1,
+      silence: false,
+      keepAwake: false,
+    });
+  };
+
+  const handleStart20s10sPomodoro = () => {
+    focusController.start(
+      {
+        mode: 'pomodoro',
+        subjectId: selectedSubjectId,
+        focusMs: 20 * 1000,
+        breakMs: 10 * 1000,
+        longBreakMs: 15 * 1000,
+        rounds: 2,
+        silence: false,
+        keepAwake: false,
+      },
+      { skipValidation: true },
+    );
+  };
+
+  const handlePauseFocus = async () => {
+    await focusController.pause();
+  };
+
+  const handleResumeFocus = async () => {
+    await focusController.resume();
+  };
+
+  const handleStopFocus = async () => {
+    await focusController.stop();
   };
 
   return (
@@ -279,6 +373,125 @@ export function DevMenu(): React.JSX.Element {
         />
       </Card>
 
+      {/* Focus playground */}
+      <Card style={styles.card}>
+        <Text variant="heading" color="text" style={styles.sectionTitle}>
+          Focus Playground
+        </Text>
+        <Text variant="caption" color="textMuted" style={styles.sectionSubtitle}>
+          Timer engine state & live event stream
+        </Text>
+
+        {focusActive ? (
+          <View style={styles.stateBox}>
+            <Text variant="body" color="primary">
+              Active: {focusActive.config.mode} ({focusActive.status})
+            </Text>
+            <Text variant="caption" color="text">
+              Phase: {focusActive.phase} | Round: {focusActive.round}/
+              {focusActive.config.rounds}
+            </Text>
+            <Text variant="caption" color="text">
+              Remaining:{' '}
+              {focusRemainingMs !== null
+                ? `${formatDuration(Math.ceil(focusRemainingMs / 1000))} (${focusRemainingMs}ms)`
+                : 'null'}
+            </Text>
+            <Text variant="caption" color="text">
+              Focused:{' '}
+              {formatDuration(Math.floor(focusFocusedMs / 1000))} (
+              {focusFocusedMs}ms)
+            </Text>
+            <Text variant="caption" color="text">
+              Progress:{' '}
+              {focusProgress !== null
+                ? `${Math.round(focusProgress * 100)}%`
+                : 'null'}
+            </Text>
+          </View>
+        ) : (
+          <Text variant="caption" color="textMuted">
+            No active session
+          </Text>
+        )}
+
+        {focusResult && (
+          <View style={[styles.stateBox, styles.marginTopSm]}>
+            <Text variant="caption" color="primary">
+              Last result: {focusResult.mode} (focused: {focusResult.focusedSecs}
+              s, saved: {focusResult.saved ? 'yes' : 'no'}, completed:{' '}
+              {focusResult.completed ? 'yes' : 'no'})
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Start 2m Countdown"
+          variant="primary"
+          onPress={handleStart2mCountdown}
+          accessibilityLabel="Start 2m countdown"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Start 20s/10s Pomodoro"
+          variant="secondary"
+          onPress={handleStart20s10sPomodoro}
+          accessibilityLabel="Start 20s 10s Pomodoro"
+        />
+
+        <View style={styles.spacer} />
+
+        <View style={styles.buttonRow}>
+          <View style={styles.flex}>
+            <Button
+              title="Pause"
+              variant="secondary"
+              onPress={handlePauseFocus}
+              accessibilityLabel="Pause focus timer"
+            />
+          </View>
+          <View style={styles.spacerSm} />
+          <View style={styles.flex}>
+            <Button
+              title="Resume"
+              variant="secondary"
+              onPress={handleResumeFocus}
+              accessibilityLabel="Resume focus timer"
+            />
+          </View>
+          <View style={styles.spacerSm} />
+          <View style={styles.flex}>
+            <Button
+              title="Stop"
+              variant="ghost"
+              onPress={handleStopFocus}
+              accessibilityLabel="Stop focus timer"
+            />
+          </View>
+        </View>
+
+        <View style={styles.spacer} />
+
+        <Text variant="caption" color="textMuted">
+          Event Log (last 10):
+        </Text>
+        {eventLog.length === 0 ? (
+          <Text variant="caption" color="textMuted">
+            No events yet
+          </Text>
+        ) : (
+          eventLog.map(item => (
+            <Text key={item.id} variant="caption" color="text">
+              • {item.text}
+            </Text>
+          ))
+        )}
+      </Card>
+
       <View style={styles.footer}>
         <Button
           title="Close Dev Menu"
@@ -333,5 +546,21 @@ const styles = StyleSheet.create({
   galleryHeader: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
+  },
+  stateBox: {
+    padding: spacing.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 6,
+    gap: 2,
+  },
+  marginTopSm: {
+    marginTop: spacing.sm,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  spacerSm: {
+    width: spacing.sm,
   },
 });
