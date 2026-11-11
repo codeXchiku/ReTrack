@@ -15,3 +15,9 @@ jest.mock('@op-engineering/op-sqlite', () => ({
     close: jest.fn(),
   })),
 }));
+jest.mock('@sayem314/react-native-keep-awake', () => ({
+  activateKeepAwake: jest.fn(),
+  deactivateKeepAwake: jest.fn(),
+  useKeepAwake: jest.fn(),
+  default: () => null,
+}));

@@ -6,6 +6,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Animated, {
+  type EasingFunction,
   ReduceMotion,
   useAnimatedProps,
   useSharedValue,
@@ -20,6 +21,8 @@ export type ProgressRingProps = {
   strokeWidth?: number;
   color?: string;
   trackColor?: string;
+  duration?: number;
+  easing?: EasingFunction;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
@@ -36,6 +39,8 @@ export function ProgressRing({
   strokeWidth = 10,
   color,
   trackColor,
+  duration = 350,
+  easing,
   children,
   style,
   accessibilityLabel = 'Circular progress indicator',
@@ -46,10 +51,11 @@ export function ProgressRing({
 
   useEffect(() => {
     animatedProgress.value = withTiming(clamped, {
-      duration: 350,
+      duration,
+      easing,
       reduceMotion: ReduceMotion.System,
     });
-  }, [clamped, animatedProgress]);
+  }, [clamped, animatedProgress, duration, easing]);
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
