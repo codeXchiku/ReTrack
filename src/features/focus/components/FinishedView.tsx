@@ -4,6 +4,7 @@ import { formatDuration } from '@/core/time';
 import { spacing } from '@/core/theme';
 import { Button, Card, Screen, Text } from '@/core/ui';
 import { getSubjectSync } from '@/features/subjects';
+import { pomodoroStoppedEarlyText } from '../logic/labels';
 import { focusController } from '../services/focusController';
 import type { FocusResult } from '../store/focusStore';
 
@@ -20,6 +21,13 @@ export function FinishedView({ result }: FinishedViewProps): React.JSX.Element {
 
   const title = result.completed ? 'Session complete' : 'Session ended';
   const durationText = formatDuration(result.focusedSecs);
+  const isPomodoro = result.mode === 'pomodoro';
+  const pomodoroSubtitle = isPomodoro
+    ? result.completed
+      ? `${result.rounds} ${result.rounds === 1 ? 'round' : 'rounds'} - ${durationText} focused`
+      : pomodoroStoppedEarlyText(result.rounds)
+    : null;
+
   const savedNote = result.saved
     ? 'Saved to study history'
     : 'Not saved (under 30s)';
@@ -39,6 +47,16 @@ export function FinishedView({ result }: FinishedViewProps): React.JSX.Element {
           <Text variant="title" color="text" style={styles.title}>
             {title}
           </Text>
+
+          {pomodoroSubtitle && (
+            <Text
+              variant="body"
+              color="primary"
+              style={styles.pomodoroSubtitle}
+            >
+              {pomodoroSubtitle}
+            </Text>
+          )}
 
           <View style={styles.statsBlock}>
             <Text variant="timer" color="primary" style={styles.duration}>
@@ -107,8 +125,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xs,
     textAlign: 'center',
+  },
+  pomodoroSubtitle: {
+    marginBottom: spacing.md,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   statsBlock: {
     alignItems: 'center',

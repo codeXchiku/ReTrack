@@ -178,12 +178,12 @@ export function DevMenu(): React.JSX.Element {
     });
   };
 
-  const handleStart20s10sPomodoro = () => {
+  const handleStart15s10sPomodoro = () => {
     focusController.start(
       {
         mode: 'pomodoro',
         subjectId: selectedSubjectId,
-        focusMs: 20 * 1000,
+        focusMs: 15 * 1000,
         breakMs: 10 * 1000,
         longBreakMs: 15 * 1000,
         rounds: 2,
@@ -437,10 +437,10 @@ export function DevMenu(): React.JSX.Element {
         <View style={styles.spacer} />
 
         <Button
-          title="Start 20s/10s Pomodoro"
+          title="Start 15s/10s Pomodoro (2 rounds)"
           variant="secondary"
-          onPress={handleStart20s10sPomodoro}
-          accessibilityLabel="Start 20s 10s Pomodoro"
+          onPress={handleStart15s10sPomodoro}
+          accessibilityLabel="Start 15s 10s Pomodoro 2 rounds"
         />
 
         <View style={styles.spacer} />

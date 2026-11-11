@@ -10,12 +10,12 @@ import {
   SegmentedControl,
   Text,
   TextField,
-  Toggle,
   showToast,
 } from '@/core/ui';
 import { SubjectPicker } from '@/features/subjects';
 import { ActiveSessionView } from '../components/ActiveSessionView';
 import { FinishedView } from '../components/FinishedView';
+import { SessionOptions } from '../components/SessionOptions';
 import { useFocusActive, useFocusResult } from '../hooks';
 import { buildConfig, validateConfig } from '../logic/presets';
 import { parseCustomMinutes } from '../logic/timerFormat';
@@ -182,41 +182,12 @@ function SimpleTimerForm(): React.JSX.Element {
         )}
 
         {/* Toggle options */}
-        <View style={styles.togglesSection}>
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleLabelContainer}>
-              <Text variant="body" color="text">
-                Silence notifications
-              </Text>
-              <Text variant="caption" color="textMuted">
-                Enable Do Not Disturb while focusing
-              </Text>
-            </View>
-            <Toggle
-              value={silence}
-              onValueChange={setSilence}
-              accessibilityLabel="Toggle silence notifications"
-            />
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleLabelContainer}>
-              <Text variant="body" color="text">
-                Keep screen on
-              </Text>
-              <Text variant="caption" color="textMuted">
-                Prevent display from sleeping while running
-              </Text>
-            </View>
-            <Toggle
-              value={keepAwake}
-              onValueChange={setKeepAwake}
-              accessibilityLabel="Toggle keep screen on"
-            />
-          </View>
-        </View>
+        <SessionOptions
+          silence={silence}
+          onSilenceChange={setSilence}
+          keepAwake={keepAwake}
+          onKeepAwakeChange={setKeepAwake}
+        />
 
         {/* Pluggable setup hints slot (e.g. Silence feature permissions) */}
         <View style={styles.slotSection}>
