@@ -25,6 +25,7 @@ export {
 
 export * from './hooks';
 export * from './logic/timerFormat';
+export * from './logic/labels';
 export {
   ActiveSessionView,
   type ActiveSessionViewProps,
@@ -33,3 +34,11 @@ export {
   FinishedView,
   type FinishedViewProps,
 } from './components/FinishedView';
+export {
+  RoundDots,
+  type RoundDotsProps,
+} from './components/RoundDots';
+export {
+  SessionOptions,
+  type SessionOptionsProps,
+} from './components/SessionOptions';
