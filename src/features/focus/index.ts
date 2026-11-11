@@ -1,3 +1,44 @@
 /**
  * Public API for focus feature.
+ * All other features import ONLY from this file.
  */
+
+export * from './logic/types';
+export * from './logic/presets';
+export * from './logic/selectors';
+export * from './logic/engine';
+
+export {
+  useFocusStore,
+  type FocusResult,
+  type FocusStoreState,
+} from './store/focusStore';
+
+export {
+  focusController,
+  lastConfigSetting,
+  type StartFocusError,
+  type StartFocusResult,
+  type StartFocusOptions,
+  type FocusStorage,
+} from './services/focusController';
+
+export * from './hooks';
+export * from './logic/timerFormat';
+export * from './logic/labels';
+export {
+  ActiveSessionView,
+  type ActiveSessionViewProps,
+} from './components/ActiveSessionView';
+export {
+  FinishedView,
+  type FinishedViewProps,
+} from './components/FinishedView';
+export {
+  RoundDots,
+  type RoundDotsProps,
+} from './components/RoundDots';
+export {
+  SessionOptions,
+  type SessionOptionsProps,
+} from './components/SessionOptions';

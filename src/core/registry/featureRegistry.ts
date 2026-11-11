@@ -15,6 +15,7 @@ const screens: ScreenDef[] = [];
 const slotItems = new Map<SlotName, SlotItem[]>();
 const backupProviders: BackupProvider[] = [];
 const initFunctions: (() => void | Promise<void>)[] = [];
+const startupResolvers: { order: number; resolve: () => string | null }[] = [];
 
 /**
  * Resets the registry state (primarily for tests).
@@ -27,6 +28,7 @@ export function clearRegistry(): void {
   slotItems.clear();
   backupProviders.length = 0;
   initFunctions.length = 0;
+  startupResolvers.length = 0;
 }
 
 /**
@@ -99,6 +101,10 @@ export function registerFeatures(manifests: FeatureManifest[]): void {
     if (manifest.init) {
       initFunctions.push(manifest.init);
     }
+
+    if (manifest.startupRoute) {
+      startupResolvers.push(manifest.startupRoute);
+    }
   }
 }
 
@@ -151,4 +157,20 @@ export async function runFeatureInits(): Promise<void> {
     await init();
   }
 }
+
+/**
+ * Returns the first resolved startup route from registered manifests ordered by order ascending,
+ * or null if none resolved.
+ */
+export function getStartupRoute(): string | null {
+  const sorted = [...startupResolvers].sort((a, b) => a.order - b.order);
+  for (const entry of sorted) {
+    const route = entry.resolve();
+    if (route !== null && route !== undefined && route !== '') {
+      return route;
+    }
+  }
+  return null;
+}
+
 

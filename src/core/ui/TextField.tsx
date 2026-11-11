@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  type KeyboardTypeOptions,
   type StyleProp,
   StyleSheet,
   TextInput,
@@ -19,6 +20,7 @@ export type TextFieldProps = {
   numberOfLines?: number;
   error?: string;
   maxLength?: number;
+  keyboardType?: KeyboardTypeOptions;
   accessibilityLabel?: string;
   autoFocus?: boolean;
   secureTextEntry?: boolean;
@@ -38,6 +40,7 @@ export function TextField({
   numberOfLines = 1,
   error,
   maxLength,
+  keyboardType,
   accessibilityLabel,
   autoFocus,
   secureTextEntry,
@@ -85,6 +88,7 @@ export function TextField({
           multiline={multiline}
           numberOfLines={multiline ? numberOfLines : 1}
           maxLength={maxLength}
+          keyboardType={keyboardType}
           autoFocus={autoFocus}
           secureTextEntry={secureTextEntry}
           onFocus={() => setIsFocused(true)}

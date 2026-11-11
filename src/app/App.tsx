@@ -1,39 +1,140 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { UiGallery } from '@/dev/UiGallery';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+  type Theme,
+} from '@react-navigation/native';
+import { flushNavigationQueue, navigationRef } from '@/core/navigation';
+import { darkPalette, spacing, useTheme } from '@/core/theme';
+import { Button, Screen, Text } from '@/core/ui';
+import { RootNavigator } from '@/navigation';
 import { AppProviders } from './AppProviders';
 import { bootstrap } from './bootstrap';
 
-bootstrap();
+type BootstrapState =
+  | { status: 'loading' }
+  | { status: 'ready' }
+  | { status: 'error'; message: string };
+
+function AppContent(): React.JSX.Element {
+  const [state, setState] = useState<BootstrapState>({ status: 'loading' });
+  const { tokens, isDark } = useTheme();
+
+  const runBootstrap = useCallback(async () => {
+    setState({ status: 'loading' });
+    try {
+      await bootstrap();
+      setState({ status: 'ready' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setState({ status: 'error', message });
+    }
+  }, []);
+
+  useEffect(() => {
+    runBootstrap();
+  }, [runBootstrap]);
+
+  const navTheme: Theme = useMemo(() => {
+    const baseTheme = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...baseTheme,
+      dark: isDark,
+      colors: {
+        ...baseTheme.colors,
+        primary: tokens.colors.primary,
+        background: tokens.colors.background,
+        card: tokens.colors.surface,
+        text: tokens.colors.text,
+        border: tokens.colors.border,
+        notification: tokens.colors.focus,
+      },
+    };
+  }, [isDark, tokens]);
+
+  if (state.status === 'loading') {
+    return (
+      <View
+        style={styles.splashContainer}
+        accessibilityLabel="Loading Study Dojo"
+      >
+        <Text variant="title" color="text">
+          Study Dojo
+        </Text>
+      </View>
+    );
+  }
+
+  if (state.status === 'error') {
+    return (
+      <Screen style={styles.errorContainer}>
+        <View style={styles.errorContent}>
+          <Text variant="title" color="danger" style={styles.errorTitle}>
+            Startup Failed
+          </Text>
+          <Text variant="body" color="textMuted" style={styles.errorMessage}>
+            {state.message}
+          </Text>
+          <Button
+            title="Try again"
+            variant="primary"
+            onPress={runBootstrap}
+            accessibilityLabel="Try again"
+          />
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <NavigationContainer
+      theme={navTheme}
+      ref={navigationRef}
+      onReady={flushNavigationQueue}
+    >
+      <RootNavigator />
+    </NavigationContainer>
+  );
+}
 
 export function App(): React.JSX.Element {
   return (
     <SafeAreaProvider>
       <AppProviders>
-        {typeof __DEV__ !== 'undefined' && __DEV__ ? (
-          <UiGallery />
-        ) : (
-          <View style={styles.container}>
-            <Text style={styles.text}>Study Dojo</Text>
-          </View>
-        )}
+        <AppContent />
       </AppProviders>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  splashContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: darkPalette.background,
   },
-  text: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '600',
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xxl,
+  },
+  errorContent: {
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 360,
+  },
+  errorTitle: {
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    marginBottom: spacing.xxl,
+    textAlign: 'center',
   },
 });
 
