@@ -42,3 +42,17 @@ export {
   SessionOptions,
   type SessionOptionsProps,
 } from './components/SessionOptions';
+export {
+  NotificationPermissionStep,
+} from './components/NotificationPermissionStep';
+export * from './logic/notificationText';
+export {
+  notificationService,
+  ensureNotificationPermission,
+  resetPermissionToastFlag,
+  RUNNING_CHANNEL_ID,
+  SESSION_END_CHANNEL_ID,
+  SESSION_END_SILENT_CHANNEL_ID,
+  RUNNING_NOTIFICATION_ID,
+  ALERT_NOTIFICATION_ID,
+} from './services/notificationService';
