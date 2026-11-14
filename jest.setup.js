@@ -24,3 +24,16 @@ jest.mock('@sayem314/react-native-keep-awake', () => ({
 jest.mock('@notifee/react-native', () =>
   require('@notifee/react-native/jest-mock'),
 );
+jest.mock('react-native-haptic-feedback', () => ({
+  trigger: jest.fn(),
+  HapticFeedbackTypes: {
+    impactLight: 'impactLight',
+    impactMedium: 'impactMedium',
+    notificationSuccess: 'notificationSuccess',
+    notificationWarning: 'notificationWarning',
+  },
+  default: {
+    trigger: jest.fn(),
+  },
+}));
+

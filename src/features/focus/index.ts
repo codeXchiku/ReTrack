@@ -46,6 +46,7 @@ export {
   NotificationPermissionStep,
 } from './components/NotificationPermissionStep';
 export * from './logic/notificationText';
+export { feedbackService } from './services/feedbackService';
 export {
   notificationService,
   ensureNotificationPermission,

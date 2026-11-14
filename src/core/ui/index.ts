@@ -13,4 +13,6 @@ export * from './BottomSheet';
 export * from './toast';
 export * from './dialog';
 export * from './icons';
+export * from './Celebration';
+export * from './FlameBadge';
 
