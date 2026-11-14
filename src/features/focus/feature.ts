@@ -3,12 +3,14 @@ import { TimerIcon } from '@/core/ui';
 import { NotificationPermissionStep } from './components/NotificationPermissionStep';
 import { PomodoroScreen } from './screens/PomodoroScreen';
 import { SimpleTimerScreen } from './screens/SimpleTimerScreen';
+import { feedbackService } from './services/feedbackService';
 import { focusController } from './services/focusController';
 import { notificationService } from './services/notificationService';
 
 export const manifest: FeatureManifest = {
   id: 'focus',
   init: async () => {
+    feedbackService.init();
     await notificationService.init();
     await focusController.restore();
   },

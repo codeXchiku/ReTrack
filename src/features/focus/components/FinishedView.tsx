@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { formatDuration } from '@/core/time';
 import { spacing } from '@/core/theme';
-import { Button, Card, Screen, Text } from '@/core/ui';
+import { Button, Card, Celebration, FlameBadge, Screen, Text } from '@/core/ui';
 import { getSubjectSync } from '@/features/subjects';
 import { pomodoroStoppedEarlyText } from '../logic/labels';
 import { focusController } from '../services/focusController';
@@ -13,7 +13,8 @@ export type FinishedViewProps = {
 };
 
 /**
- * Basic completion view shown when a focus session finishes or stops.
+ * Completion view shown when a focus session finishes or stops.
+ * Features celebration confetti burst and streak milestone badges.
  */
 export function FinishedView({ result }: FinishedViewProps): React.JSX.Element {
   const subject = result.subjectId ? getSubjectSync(result.subjectId) : null;
@@ -28,13 +29,15 @@ export function FinishedView({ result }: FinishedViewProps): React.JSX.Element {
       : pomodoroStoppedEarlyText(result.rounds)
     : null;
 
-  const savedNote = result.saved
-    ? 'Saved to study history'
-    : 'Not saved (under 30s)';
-
   const handleDone = () => {
     focusController.dismissResult();
   };
+
+  const isStreakIncrement = result.streakAfter > result.streakBefore;
+  const streakDaysText = `${result.streakAfter} ${result.streakAfter === 1 ? 'day' : 'days'}`;
+
+  // Celebration plays only when session completed naturally and was saved
+  const showCelebration = result.completed && result.saved;
 
   return (
     <Screen
@@ -42,6 +45,8 @@ export function FinishedView({ result }: FinishedViewProps): React.JSX.Element {
       style={styles.container}
       accessibilityLabel="Session Finished Screen"
     >
+      {showCelebration && <Celebration runKey={result.sessionId} />}
+
       <View style={styles.content}>
         <Card style={styles.card}>
           <Text variant="title" color="text" style={styles.title}>
@@ -76,22 +81,33 @@ export function FinishedView({ result }: FinishedViewProps): React.JSX.Element {
             </Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text variant="body" color="textMuted">
-              Status:
-            </Text>
-            <Text variant="body" color="textMuted">
-              {savedNote}
-            </Text>
-          </View>
-
-          {result.saved && result.streakAfter > 0 && (
+          {result.saved ? (
+            <View style={styles.streakSection}>
+              {isStreakIncrement ? (
+                <View style={styles.streakIncrementContainer}>
+                  <FlameBadge streak={result.streakAfter} />
+                  <Text variant="body" color="primary" style={styles.streakIncrementText}>
+                    {`Streak +1! Day ${result.streakAfter}`}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.infoRow}>
+                  <Text variant="body" color="textMuted">
+                    Streak:
+                  </Text>
+                  <Text variant="body" color="text" style={styles.bold}>
+                    {`Current streak: ${streakDaysText}`}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : (
             <View style={styles.infoRow}>
               <Text variant="body" color="textMuted">
-                Streak:
+                Status:
               </Text>
-              <Text variant="body" color="primary" style={styles.bold}>
-                {result.streakAfter} {result.streakAfter === 1 ? 'day' : 'days'}
+              <Text variant="body" color="textMuted">
+                Too short to save
               </Text>
             </View>
           )}
@@ -148,6 +164,19 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: '600',
+  },
+  streakSection: {
+    width: '100%',
+  },
+  streakIncrementContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+  },
+  streakIncrementText: {
+    fontWeight: '700',
   },
   spacer: {
     height: spacing.lg,
