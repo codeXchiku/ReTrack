@@ -1,12 +1,15 @@
 import type { FeatureManifest } from '@/core/registry/types';
 import { TimerIcon } from '@/core/ui';
+import { NotificationPermissionStep } from './components/NotificationPermissionStep';
 import { PomodoroScreen } from './screens/PomodoroScreen';
 import { SimpleTimerScreen } from './screens/SimpleTimerScreen';
 import { focusController } from './services/focusController';
+import { notificationService } from './services/notificationService';
 
 export const manifest: FeatureManifest = {
   id: 'focus',
   init: async () => {
+    await notificationService.init();
     await focusController.restore();
   },
   tabs: [
@@ -33,4 +36,13 @@ export const manifest: FeatureManifest = {
       component: PomodoroScreen,
     },
   ],
+  slots: {
+    'onboarding.steps': [
+      {
+        id: 'focus.notifications',
+        order: 50,
+        component: NotificationPermissionStep as React.ComponentType<Record<string, unknown>>,
+      },
+    ],
+  },
 };

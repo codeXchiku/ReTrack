@@ -12,6 +12,7 @@
     "start": "react-native start"
   },
   "dependencies": {
+    "@notifee/react-native": "^9.1.8",
     "@op-engineering/op-sqlite": "^19.0.5",
     "@react-native-community/datetimepicker": "^9.3.0",
     "@react-native/new-app-screen": "0.88.1",

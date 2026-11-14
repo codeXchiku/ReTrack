@@ -21,3 +21,6 @@ jest.mock('@sayem314/react-native-keep-awake', () => ({
   useKeepAwake: jest.fn(),
   default: () => null,
 }));
+jest.mock('@notifee/react-native', () =>
+  require('@notifee/react-native/jest-mock'),
+);

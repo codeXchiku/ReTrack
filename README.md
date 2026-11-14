@@ -112,3 +112,7 @@ Study Dojo follows a strict modular feature architecture:
 1. **Create the Feature Folder**: Add `src/features/<name>` with `index.ts` (public API) and `feature.ts` declaring its `FeatureManifest` (declaring tabs, subTabs, screens, slots, backup, or init hooks).
 2. **Implement Logic & UI**: Build screens in `screens/`, components in `components/`, and business logic as pure functions in `logic/` with unit tests.
 3. **Register the Manifest**: Add the feature manifest to the `features` array in `src/app/features.ts`.
+
+## Known limits
+
+- **Background Alarm Delivery in Doze Mode**: Phase completion alerts scheduled via Android's AlarmManager (`allowWhileIdle: true`) use inexact alarms to respect system battery optimizations without requiring the sensitive `SCHEDULE_EXACT_ALARM` special permission on Android 12+. Consequently, while an ongoing notification displays a continuous live countdown in the status bar, the audible/vibrating completion alert may be delayed by a few minutes when a device is deep in Android Doze mode on certain OEM power management configurations.

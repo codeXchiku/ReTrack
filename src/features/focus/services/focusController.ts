@@ -17,6 +17,7 @@ import type {
   TimerState,
 } from '../logic/types';
 import { type FocusResult, useFocusStore } from '../store/focusStore';
+import { ensureNotificationPermission } from './notificationService';
 
 const ACTIVE_STATE_KEY = 'focus.activeState';
 
@@ -284,6 +285,9 @@ export function start(
       return { ok: false, error: val.error };
     }
   }
+
+  // Request notification permission on first session start; runs without blocking
+  ensureNotificationPermission().catch(() => {});
 
   setupAppStateListener();
   const now = options.now ?? activeClock.now();
