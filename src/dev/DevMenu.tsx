@@ -30,6 +30,7 @@ import {
   useSubjectTotals,
   useTodayFocusedSecs,
 } from '@/features/sessions';
+import { silenceApi, type DndStatus } from '@/features/silence';
 import { UiGallery } from './UiGallery';
 
 const testStorageSetting = createSetting<string>('settings.testKey', 'not_set');
@@ -52,6 +53,8 @@ export function DevMenu(): React.JSX.Element {
   const focusResult = useFocusResult();
 
   const [eventLog, setEventLog] = useState<{ id: string; text: string }[]>([]);
+  const [dndStatus, setDndStatus] = useState<DndStatus | null>(null);
+  const [dndLastResult, setDndLastResult] = useState<string>('none');
 
   useEffect(() => {
     const addLog = (name: string, detail: string) => {
@@ -204,6 +207,45 @@ export function DevMenu(): React.JSX.Element {
 
   const handleStopFocus = async () => {
     await focusController.stop();
+  };
+
+  const handleDndStatus = async () => {
+    try {
+      const status = await silenceApi.getStatus();
+      setDndStatus(status);
+      setDndLastResult(
+        `Status: granted=${status.granted}, filter=${status.currentFilter}, owned=${status.ownedByApp}, endsAt=${status.endsAt}`,
+      );
+    } catch (e) {
+      setDndLastResult(`Status error: ${String(e)}`);
+    }
+  };
+
+  const handleDndOpenSettings = async () => {
+    await silenceApi.openPolicyAccessSettings();
+  };
+
+  const handleDndEnter = async () => {
+    const endsAt = Date.now() + 60000;
+    const res = await silenceApi.enter(endsAt);
+    setDndLastResult(`Enter result: ${res}`);
+    const status = await silenceApi.getStatus();
+    setDndStatus(status);
+  };
+
+  const handleDndEnter5s = async () => {
+    const endsAt = Date.now() + 5000;
+    const res = await silenceApi.enter(endsAt);
+    setDndLastResult(`Enter 5s result: ${res}`);
+    const status = await silenceApi.getStatus();
+    setDndStatus(status);
+  };
+
+  const handleDndExit = async () => {
+    const res = await silenceApi.exit();
+    setDndLastResult(`Exit result: ${res}`);
+    const status = await silenceApi.getStatus();
+    setDndStatus(status);
   };
 
   return (
@@ -490,6 +532,79 @@ export function DevMenu(): React.JSX.Element {
             </Text>
           ))
         )}
+      </Card>
+
+      {/* DND playground */}
+      <Card style={styles.card}>
+        <Text variant="heading" color="text" style={styles.sectionTitle}>
+          DND Playground
+        </Text>
+        <Text variant="caption" color="textMuted" style={styles.sectionSubtitle}>
+          Do Not Disturb native policy & restore
+        </Text>
+
+        <View style={styles.stateBox}>
+          <Text variant="caption" color="primary">
+            Last: {dndLastResult}
+          </Text>
+          <Text variant="caption" color="text">
+            Granted: {dndStatus ? (dndStatus.granted ? 'Yes' : 'No') : 'Unknown'}
+          </Text>
+          <Text variant="caption" color="text">
+            Filter: {dndStatus ? dndStatus.currentFilter : 'Unknown'} (1=ALL, 2=PRIORITY, 3=NONE, 4=ALARMS)
+          </Text>
+          <Text variant="caption" color="text">
+            Owned by app: {dndStatus ? (dndStatus.ownedByApp ? 'Yes' : 'No') : 'Unknown'}
+          </Text>
+          <Text variant="caption" color="text">
+            Ends at: {dndStatus && dndStatus.endsAt > 0 ? new Date(dndStatus.endsAt).toLocaleTimeString() : 'None'}
+          </Text>
+        </View>
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Status"
+          variant="secondary"
+          onPress={handleDndStatus}
+          accessibilityLabel="Check DND status"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Open settings"
+          variant="secondary"
+          onPress={handleDndOpenSettings}
+          accessibilityLabel="Open DND policy access settings"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Enter (now + 60s)"
+          variant="primary"
+          onPress={handleDndEnter}
+          accessibilityLabel="Enter DND for 60 seconds"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Enter (now + 5s)"
+          variant="secondary"
+          onPress={handleDndEnter5s}
+          accessibilityLabel="Enter DND for 5 seconds"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Exit"
+          variant="ghost"
+          onPress={handleDndExit}
+          accessibilityLabel="Exit DND"
+        />
       </Card>
 
       <View style={styles.footer}>

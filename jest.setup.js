@@ -37,3 +37,18 @@ jest.mock('react-native-haptic-feedback', () => ({
   },
 }));
 
+const { NativeModules } = require('react-native');
+NativeModules.DndModule = {
+  isPolicyAccessGranted: jest.fn(async () => true),
+  openPolicyAccessSettings: jest.fn(async () => {}),
+  getStatus: jest.fn(async () => ({
+    granted: true,
+    currentFilter: 1,
+    ownedByApp: false,
+    endsAt: 0,
+  })),
+  enter: jest.fn(async () => 'applied'),
+  exit: jest.fn(async () => 'restored'),
+};
+
+
