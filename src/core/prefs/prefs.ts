@@ -18,3 +18,10 @@ export const soundEnabledSetting: Setting<boolean> = createSetting<boolean>(
   'prefs.soundEnabled',
   true,
 );
+
+export const silenceDefaultSetting: Setting<boolean> = createSetting<boolean>(
+  'prefs.silenceDefault',
+  true,
+);
+
+export const silenceDefault = silenceDefaultSetting;

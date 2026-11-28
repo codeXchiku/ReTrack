@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Slot } from '@/core/registry';
+import { silenceDefaultSetting } from '@/core/prefs';
 import { spacing, useTheme } from '@/core/theme';
 import {
   BottomSheet,
@@ -59,7 +60,7 @@ function PomodoroForm(): React.JSX.Element {
       : 5;
   const initialRounds =
     isLastPomodoro && lastConfig?.rounds ? lastConfig.rounds : 4;
-  const initialSilence = lastConfig?.silence ?? true;
+  const initialSilence = lastConfig?.silence ?? silenceDefaultSetting.get();
   const initialKeepAwake = lastConfig?.keepAwake ?? true;
 
   const [subjectId, setSubjectId] = useState<string | null>(initialSubjectId);
