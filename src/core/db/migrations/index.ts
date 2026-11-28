@@ -2,10 +2,14 @@ import type { Migration } from '../migrate';
 import { migration0001 } from './0001_app_meta';
 import { migration0002 } from './0002_subjects';
 import { migration0003 } from './0003_sessions';
+import { migration0004 } from './0004_cards';
+import { migration0005 } from './0005_reviews';
 
 export * from './0001_app_meta';
 export * from './0002_subjects';
 export * from './0003_sessions';
+export * from './0004_cards';
+export * from './0005_reviews';
 
 /**
  * Ordered list of all database migrations.
@@ -14,8 +18,16 @@ export const migrations: Migration[] = [
   migration0001,
   migration0002,
   migration0003,
+  migration0004,
+  migration0005,
 ];
 
 export function getMigrations(): Migration[] {
-  return [migration0001, migration0002, migration0003];
+  return [
+    migration0001,
+    migration0002,
+    migration0003,
+    migration0004,
+    migration0005,
+  ];
 }
