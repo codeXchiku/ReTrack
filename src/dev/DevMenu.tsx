@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getDb } from '@/core/db';
 import { eventBus } from '@/core/events';
 import { navigateToScreen } from '@/core/navigation';
+import { silenceDefaultSetting } from '@/core/prefs';
 import { createSetting } from '@/core/storage';
 import { formatDuration } from '@/core/time';
 import { spacing } from '@/core/theme';
@@ -30,7 +31,11 @@ import {
   useSubjectTotals,
   useTodayFocusedSecs,
 } from '@/features/sessions';
-import { silenceApi, type DndStatus } from '@/features/silence';
+import {
+  silenceApi,
+  useSilenceStore,
+  type DndStatus,
+} from '@/features/silence';
 import { UiGallery } from './UiGallery';
 
 const testStorageSetting = createSetting<string>('settings.testKey', 'not_set');
@@ -51,6 +56,9 @@ export function DevMenu(): React.JSX.Element {
   const focusProgress = useProgress();
   const focusFocusedMs = useFocusedMs();
   const focusResult = useFocusResult();
+  const silenceState = useSilenceStore(s => s.state);
+  const silenceGranted = useSilenceStore(s => s.granted);
+  const silenceLastError = useSilenceStore(s => s.lastError);
 
   const [eventLog, setEventLog] = useState<{ id: string; text: string }[]>([]);
   const [dndStatus, setDndStatus] = useState<DndStatus | null>(null);
@@ -190,7 +198,7 @@ export function DevMenu(): React.JSX.Element {
         breakMs: 10 * 1000,
         longBreakMs: 15 * 1000,
         rounds: 2,
-        silence: false,
+        silence: silenceDefaultSetting.get(),
         keepAwake: false,
       },
       { skipValidation: true },
@@ -466,6 +474,13 @@ export function DevMenu(): React.JSX.Element {
             </Text>
           </View>
         )}
+
+        <View style={[styles.stateBox, styles.marginTopSm]}>
+          <Text variant="caption" color="text">
+            Silence: {silenceState} | Granted: {silenceGranted ? 'Yes' : 'No'}
+            {silenceLastError ? ` | Error: ${silenceLastError}` : ''}
+          </Text>
+        </View>
 
         <View style={styles.spacer} />
 

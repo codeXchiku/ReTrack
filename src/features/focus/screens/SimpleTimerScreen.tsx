@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Slot } from '@/core/registry';
+import { silenceDefaultSetting } from '@/core/prefs';
 import { spacing } from '@/core/theme';
 import {
   BottomSheet,
@@ -51,7 +52,7 @@ function SimpleTimerForm(): React.JSX.Element {
     lastConfig?.mode === 'countdown' && lastConfig.focusMs > 0
       ? Math.round(lastConfig.focusMs / (60 * 1000))
       : 30;
-  const initialSilence = lastConfig?.silence ?? true;
+  const initialSilence = lastConfig?.silence ?? silenceDefaultSetting.get();
   const initialKeepAwake = lastConfig?.keepAwake ?? true;
 
   const [mode, setMode] = useState<TimerMode>(initialMode);

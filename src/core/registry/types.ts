@@ -27,6 +27,7 @@ export type ScreenDef = {
 export type SlotName =
   | 'home.dashboard'
   | 'focus.setupHints'
+  | 'focus.activeBadges'
   | 'focus.breakPanel'
   | 'onboarding.steps'
   | 'settings.sections';

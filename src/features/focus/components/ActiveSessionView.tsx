@@ -193,6 +193,10 @@ export function ActiveSessionView({
               {phaseLabelText}
             </Text>
           )}
+
+          <View style={styles.activeBadgesWrapper}>
+            <Slot name="focus.activeBadges" />
+          </View>
         </View>
 
         {/* Center Display with 250ms crossfade on phase change */}
@@ -380,6 +384,10 @@ const styles = StyleSheet.create({
   phaseLabel: {
     letterSpacing: 2,
     fontWeight: '700',
+  },
+  activeBadgesWrapper: {
+    marginTop: spacing.xs,
+    alignItems: 'center',
   },
   displayArea: {
     alignItems: 'center',
