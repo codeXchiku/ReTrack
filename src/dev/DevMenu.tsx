@@ -18,9 +18,20 @@ import {
   useRemainingMs,
 } from '@/features/focus';
 import {
+  clearAllCards,
+  createCard,
+  getDueCards,
+  getNewCards,
+  recordReview,
+  useCardCounts,
+  useCardStats,
+  useDueCount,
+} from '@/features/cards';
+import {
   getSubjectSync,
   NO_SUBJECT_LABEL,
   SubjectPicker,
+  useSubjects,
 } from '@/features/subjects';
 import { onboardingDone } from '@/features/onboarding';
 import {
@@ -63,6 +74,15 @@ export function DevMenu(): React.JSX.Element {
   const [eventLog, setEventLog] = useState<{ id: string; text: string }[]>([]);
   const [dndStatus, setDndStatus] = useState<DndStatus | null>(null);
   const [dndLastResult, setDndLastResult] = useState<string>('none');
+
+  // Cards playground state & hooks
+  const subjects = useSubjects();
+  const [cardSubjectId, setCardSubjectId] = useState<string | null>(null);
+  const [cardsMessage, setCardsMessage] = useState<string>('');
+  const cardCounts = useCardCounts();
+  const cardDueCount = useDueCount();
+  const cardStats = useCardStats();
+  const effectiveCardSubjectId = cardSubjectId ?? subjects[0]?.id ?? null;
 
   useEffect(() => {
     const addLog = (name: string, detail: string) => {
@@ -254,6 +274,58 @@ export function DevMenu(): React.JSX.Element {
     setDndLastResult(`Exit result: ${res}`);
     const status = await silenceApi.getStatus();
     setDndStatus(status);
+  };
+
+  const handleAdd5Cards = async () => {
+    if (!effectiveCardSubjectId) {
+      setCardsMessage('Select or create a subject first.');
+      return;
+    }
+    const baseNow = Date.now();
+    let created = 0;
+    for (let i = 1; i <= 5; i += 1) {
+      const res = await createCard(
+        {
+          subjectId: effectiveCardSubjectId,
+          front: `Sample Question ${i} (${baseNow % 10000})`,
+          back: `Sample Answer ${i}`,
+        },
+        baseNow + i,
+      );
+      if (res.ok) {
+        created += 1;
+      }
+    }
+    setCardsMessage(`Added ${created} sample cards.`);
+  };
+
+  const handleReviewSampleCard = async () => {
+    const now = Date.now();
+    const due = await getDueCards(now, 1);
+    const target = due[0] ?? (await getNewCards(1))[0];
+    if (!target) {
+      setCardsMessage('No due or new cards to review.');
+      return;
+    }
+    await recordReview({
+      cardId: target.id,
+      rating: 'easy',
+      reviewedAt: now,
+      next: {
+        ease: target.ease + 0.1,
+        intervalDays: Math.max(1, target.intervalDays * 2),
+        reps: target.reps + 1,
+        lapses: target.lapses,
+        dueAt: now + 24 * 60 * 60 * 1000,
+      },
+      intervalBefore: target.intervalDays,
+    });
+    setCardsMessage(`Reviewed "${target.front}" (easy).`);
+  };
+
+  const handleDeleteAllCards = async () => {
+    await clearAllCards();
+    setCardsMessage('Deleted all cards.');
   };
 
   return (
@@ -619,6 +691,78 @@ export function DevMenu(): React.JSX.Element {
           variant="ghost"
           onPress={handleDndExit}
           accessibilityLabel="Exit DND"
+        />
+      </Card>
+
+      {/* Cards playground */}
+      <Card style={styles.card}>
+        <Text variant="heading" color="text" style={styles.sectionTitle}>
+          Cards Playground
+        </Text>
+        <Text variant="caption" color="textMuted" style={styles.sectionSubtitle}>
+          SQLite flashcards, counts & cascade check
+        </Text>
+
+        <View style={styles.pickerRow}>
+          <SubjectPicker
+            value={effectiveCardSubjectId}
+            onChange={setCardSubjectId}
+            allowNone={false}
+            accessibilityLabel="Cards playground subject picker"
+          />
+        </View>
+
+        <View style={styles.stateBox}>
+          <Text variant="caption" color="primary">
+            Total: {cardStats.total} | Due: {cardDueCount} | Mastered: {cardStats.mastered} | Reviewed today: {cardStats.reviewedToday}
+          </Text>
+          {cardCounts.length === 0 ? (
+            <Text variant="caption" color="textMuted">
+              No cards recorded
+            </Text>
+          ) : (
+            cardCounts.map(c => {
+              const subj = getSubjectSync(c.subjectId);
+              const label = subj ? subj.name : c.subjectId;
+              return (
+                <Text key={c.subjectId} variant="caption" color="text">
+                  • {label}: total {c.total}, due {c.due}, new {c.new}
+                </Text>
+              );
+            })
+          )}
+          {cardsMessage ? (
+            <Text variant="caption" color="textMuted">
+              {cardsMessage}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Add 5 sample cards"
+          variant="primary"
+          onPress={handleAdd5Cards}
+          accessibilityLabel="Add 5 sample cards"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Review 1 card (easy)"
+          variant="secondary"
+          onPress={handleReviewSampleCard}
+          accessibilityLabel="Review 1 card easy"
+        />
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="Delete all cards"
+          variant="ghost"
+          onPress={handleDeleteAllCards}
+          accessibilityLabel="Delete all cards"
         />
       </Card>
 
